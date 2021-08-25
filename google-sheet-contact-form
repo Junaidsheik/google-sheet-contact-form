@@ -1,0 +1,109 @@
+****************************************step:1 Configuring the Google Script*****************************************************
+
+ open the google sheets
+ 
+ Choose blank and change the google sheet name
+
+then enter form data name like name, email, phone, msg, in the first row if required you can add any data.
+ 
+ you are done now  goto toolbar then select tool and then script editor.
+
+Del the code (already written) and then paste new code which is below and click the save icon, then go to save, then ask to change the name  ( put the same name  wich name in your google sheet).
+
+
+
+***************************code starts here****************************************************
+
+
+
+var sheetName = 'Sheet1'
+		var scriptProp = PropertiesService.getScriptProperties()
+
+		function intialSetup () {
+		  var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet()
+		  scriptProp.setProperty('key', activeSpreadsheet.getId())
+		}
+
+		function doPost (e) {
+		  var lock = LockService.getScriptLock()
+		  lock.tryLock(10000)
+
+		  try {
+			var doc = SpreadsheetApp.openById(scriptProp.getProperty('key'))
+			var sheet = doc.getSheetByName(sheetName)
+
+			var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+			var nextRow = sheet.getLastRow() + 1
+
+			var newRow = headers.map(function(header) {
+			  return header === 'timestamp' ? new Date() : e.parameter[header]
+			})
+
+			sheet.getRange(nextRow, 1, 1, newRow.length).setValues([newRow])
+
+			return ContentService
+			  .createTextOutput(JSON.stringify({ 'result': 'success', 'row': nextRow }))
+			  .setMimeType(ContentService.MimeType.JSON)
+		  }
+
+		  catch (e) {
+			return ContentService
+			  .createTextOutput(JSON.stringify({ 'result': 'error', 'error': e }))
+			  .setMimeType(ContentService.MimeType.JSON)
+		  }
+
+		  finally {
+			lock.releaseLock()
+		  }
+		}
+        
+          
+ *****************************************code ends here************************************************       
+        
+        
+        
+        
+then goto run then > Run function > (then) intialSetup once done the process 
+
+You might be asked to give Google Scripts to use your Google account. click on review permissions then allow.
+
+
+
+Once you’ve given your authorization, go to the “Publish” menu and select “Deploy as web app.”
+
+
+
+
+You will then be presented with a few options with which to customize your script.
+
+you will see one script URL,copy the script URL and save it.
+
+
+
+
+*************************************step:2 Building the HTML Form****************************************
+
+then add  script which is below in the script tag of your contact form.
+
+
+********************************************code starts here***********************************************
+
+
+
+const scriptURL = 'YOUR_SCRIPT_API frpm google sheets'
+            const form = document.forms['google-sheet']
+          
+            form.addEventListener('submit', e => {
+              e.preventDefault()
+              fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+                .then(response => alert("Thanks for Contacting us..! We Will Contact You Soon..."))
+                .catch(error => console.error('Error!', error.message))
+            })
+
+
+
+*******************************************code ends here***************************************************
+
+
+
+thats it. you will see all the credentials of users in the google sheets from the web contact form.
